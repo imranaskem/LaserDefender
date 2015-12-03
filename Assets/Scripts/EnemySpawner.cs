@@ -7,6 +7,7 @@ public class EnemySpawner : MonoBehaviour {
 	public float width;
 	public float height;
 	public float enemySpeed;
+	public float spawnDelay;
 	
 	private bool movingRight = true;
 	private float xMin, xMax;
@@ -19,10 +20,7 @@ public class EnemySpawner : MonoBehaviour {
 		xMax = rightEdge.x;
 		xMin = leftEdge.x;
 		
-		foreach(Transform child in transform) {
-			GameObject enemy = Instantiate(enemyPrefab, child.transform.position, Quaternion.identity) as GameObject;
-			enemy.transform.parent = child;
-		}
+		SpawnUntilFull();
 	}
 	
 	public void OnDrawGizmos () {
@@ -44,5 +42,45 @@ public class EnemySpawner : MonoBehaviour {
 			movingRight = false;
 		}
 		
+		if (AllMembersDead()) {
+			Debug.Log ("Empty Formation");
+			SpawnUntilFull();
+		}
+	}
+	
+	bool AllMembersDead() {
+		foreach(Transform childPositionGameObject in transform) {
+			if (childPositionGameObject.childCount > 0) {
+			return false;
+			}
+		}
+		return true;
+	}
+	
+	Transform NextFreePosition() {
+		foreach(Transform childPositionGameObject in transform) {
+			if (childPositionGameObject.childCount == 0) {
+				return childPositionGameObject;
+			}
+		}
+		return null;
+	}
+	
+	void SpawnEnemies() {
+		foreach(Transform child in transform) {
+			GameObject enemy = Instantiate(enemyPrefab, child.transform.position, Quaternion.identity) as GameObject;
+			enemy.transform.parent = child;
+		}
+	}
+	
+	void SpawnUntilFull() {
+		Transform freePosition = NextFreePosition();
+		if (freePosition){
+			GameObject enemy = Instantiate(enemyPrefab, freePosition.position, Quaternion.identity) as GameObject;
+			enemy.transform.parent = freePosition;
+		}
+		if (NextFreePosition()){
+			Invoke ("SpawnUntilFull", spawnDelay);
+		}	
 	}
 }

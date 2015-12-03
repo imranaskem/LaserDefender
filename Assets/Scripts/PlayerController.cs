@@ -4,10 +4,8 @@ using System.Collections;
 public class PlayerController : MonoBehaviour {
 	
 	public GameObject projectile;
-	public float speed;
-	public float padding;
-	public float projectileSpeed;
-	public float fireRate;
+	public AudioClip laserSound;
+	public float speed, padding, projectileSpeed, fireRate, health;
 	
 	float xMin;
 	float xMax;
@@ -45,7 +43,25 @@ public class PlayerController : MonoBehaviour {
 	}
 	
 	void Fire () {
-		GameObject beam = Instantiate(projectile, transform.position, Quaternion.identity) as GameObject;
-		beam.rigidbody2D.velocity = new Vector3 (0, projectileSpeed, 0);
+		GameObject playerBeam = Instantiate(projectile, transform.position, Quaternion.identity) as GameObject;
+		playerBeam.rigidbody2D.velocity = new Vector3 (0, projectileSpeed, 0);
+		AudioSource.PlayClipAtPoint (laserSound, transform.position);
+	}
+	
+	void OnTriggerEnter2D (Collider2D col) {
+		EnemyWeapon enemyMissile = col.GetComponent<EnemyWeapon>();
+		if (enemyMissile) {
+			health -= enemyMissile.GetDamage ();
+			enemyMissile.Hit();
+			if (health <= 0) {
+				Die();
+			}
+		}
+	}
+	
+	void Die() {
+		LevelManager man = GameObject.Find ("LevelManager").GetComponent<LevelManager>();
+		Destroy(gameObject);
+		man.LoadLevel ("Win Screen");
 	}
 }
